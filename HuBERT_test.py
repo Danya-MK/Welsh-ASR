@@ -8,9 +8,13 @@ from transformers import HubertForCTC, Wav2Vec2Processor
 from datasets import Dataset
 
 # ================= КОНФИГУРАЦИЯ =================
+
 MODEL_ID = "facebook/hubert-large-ls960-ft"
-CSV_FILE_PATH = "C:/Proekt/s_nulya/test/transcripts_output_wav.csv"
-AUDIO_FOLDER_PATH = "C:/Proekt/s_nulya/test/welsh_wav_test"
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
+CSV_FILE_PATH = os.path.join(BASE_DIR, "test", "transcripts_output_wav.csv")
+AUDIO_FOLDER_PATH = os.path.join(BASE_DIR, "test", "welsh_wav_test")
+# ------------------------------------------------
 
 # Имена столбцов из вашего CSV-файла
 COL_FILENAME = 'Название файла'
@@ -20,7 +24,11 @@ def main():
     
     ## 1. Загрузка и подготовка данных
     print("Загрузка датасета...")
-    df = pd.read_csv(CSV_FILE_PATH, sep=',')
+    try:
+        df = pd.read_csv(CSV_FILE_PATH, sep=',')
+    except Exception as e:
+        print(f"❌ Ошибка при чтении CSV. Проверьте путь или разделитель. Ошибка: {e}")
+        return
     
     # Проверка столбцов и переименование
     if COL_FILENAME not in df.columns or COL_TRANSCRIPT not in df.columns:
@@ -51,7 +59,6 @@ def main():
     if len(df) < initial_rows:
         print(f"⚠️ Предупреждение: Пропущено {initial_rows - len(df)} строк (аудиофайлы не найдены).")
 
-    # ❗ ИСПРАВЛЕНИЕ: Создаем один полный датасет для оценки
     full_dataset = Dataset.from_pandas(df)
     test_dataset = full_dataset 
     
@@ -76,7 +83,6 @@ def main():
     print(f"Начало оценки HuBERT на {len(test_dataset)} примерах...")
     
     ## 3. Цикл оценки (для всех примеров)
-    # ❗ ИСПРАВЛЕНИЕ: Итерируем по всему датасету
     for i, item in enumerate(test_dataset): 
         audio_path = item["path"]
         reference = item["sentence"]
